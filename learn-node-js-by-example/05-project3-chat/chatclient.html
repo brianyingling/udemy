@@ -1,0 +1,89 @@
+<!doctype html>
+<html>
+  <head>
+    <title>Socket.io Chat</title>
+    <script src='socket.io/socket.io.js'></script>
+    <script src='https://ajax.googleapis.com/ajax/libs/jquery/1.6.4/jquery.min.js'></script>
+    <script src='http://cdnjs.cloudflare.com/ajax/libs/underscore.js/1.5.1/underscore-min.js'></script>
+  </head>
+  <body>
+  <script>
+    var socket;
+    var firstConnect = true;
+    var username;
+
+    function connect() {
+      if(firstConnect) {
+        socket = io.connect(null);
+
+        // callbacks for standard socket.io server
+        socket.on('connect', function() {
+          $('#status').html('Connected to Server');
+        });
+        socket.on('disconnect', function() {
+          $('#status').html('Disconnected to Server');
+
+        });
+        socket.on('reconnecting', function() {
+          $('#status').html('Reconnecting to Server');
+        });
+        socket.on('reconnect_failed', function() {
+          $('#status').html('Reconnection failed');
+        });
+
+        socket.on('register', function() {
+          username = $('#name').val();
+          console.log('registered');
+          if(username) {
+            console.log('got here');
+            socket.emit('register', {'username':username});
+            $('#username').html(username + ' is registered');
+          }
+        });
+
+        // callback for the 'chat' client we defined
+        socket.on('chat', function(client, message) {
+          $('#messages').append('<b> '+ client + ' says: </b>'+message+'<br>');
+        });
+        firstConnect = false;
+    }
+    else {
+      socket.socket.reconnect();
+    }
+  }
+
+    function disconnect() {
+      socket.disconnect();
+    }
+
+    function send() {
+      socket.send($('#message').val() );
+    }
+
+    function register() {
+      socket.emit('register', {name: $('#name').val() });
+      // socket.send( $('#name').val() );
+      // var name = $('#name').val();
+      // if(name) $('#username').html(name + " is registered");
+
+    }
+
+
+    </script>
+    <h1>Socket.io Chat</h1>
+    <div id="username">
+      <form action="#">
+        <input type="text" id="name" placeholder='Enter Your Name'/>
+        <button id='submit' onClick='register()'>Register</button>
+      </form>
+    </div>
+    <div><p id='status'>Waiting for Input</p></div>
+    <button id='connect' onclick='connect()'>Connect</button>
+    <button id='disconnect' onclick='disconnect()'>Disconnect</button>
+    <input id='message'></input>
+    <button id='send' onClick='send()'>Send Message</button>
+    <br>
+    Messages: <br><br>
+    <div id='messages'></div>
+  </body>
+</html>
